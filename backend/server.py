@@ -24,14 +24,15 @@ app = flask.Flask(__name__)
 CORS(app)
 ann_model = None
 category_names = ['No Category', 'ABE', 'SPCM', 'NASC', 'ENG', 'PHYS/PHYSICS', 'HUM', 'ARTS', 'ECON', 'PE', 'CHEM', 'ENSC', 'NSTP', 'MATH', 'WIKA', 'HNF', 'FIL', 'AECO', 'STAT', 'CHE', 'HUME', 'ZOO', 'COMM', 'SAIS-Specific', 'Financial Concerns', 'Form Porcessing', 'Batch Appointment', 'System Issues', 'Registration Period', 'Class Permission', 'Plan of Study', 'Guidelines', 'Grades', 'COI', 'Lecture-Lab Concerns', 'Units', 'General Waitlist', 'Explicit Need of Assistance', 'Midyear', 'Misc. Subjects', 'Drop/Cancel']
+en_stops = set(stopwords.words('english'))
 
 def load_ann():
     global ann_model
     ann_model = load_model("./assets/ann.h5")
 
 def preprocess_post(post):
+    global en_stops
     
-    en_stops = set(stopwords.words('english'))
     with open("./assets/informal_fil_stopwords.txt") as file:
         tl_stops = set(file.read().splitlines())
 
@@ -63,24 +64,34 @@ def preprocess_post(post):
     #vectorization
     tfidf_vectorized = tfidf_vector.toarray()
 
-    return tfidf_vectorized
+    return tfidf_vectorized, output
 
 # define a predict function as an endpoint 
 @app.route("/predict", methods=["GET","POST"])
 def predict():
-
-    params = flask.request.json
-    if (params == None):
-        params = flask.request.args
+    global ann_model
+    data = flask.request.json
+    if (data == None):
+        data = flask.request.form
 
     # if parameters are found, echo the msg parameter 
-    if (params != None):
-        post = flask.request.args.get("message")
-        probabilities = ann_model.predict(preprocess_post(post))
-        category_index = np.argmax(probabilities)
-        confidence =  np.amax(probabilities) * 100
+    if (data != None):
+        try:
+            post = data["body"]["message"]
+            id = data["body"]["id"]
+            url = data["body"]["url"]
+            date_created = data["body"]["date_created"]
 
-    return flask.jsonify({'label_id': str(category_index), 'topic': category_names[category_index],'confidence': str(confidence)})
+            preprocessed, output_text = preprocess_post(post)
+
+            probabilities = ann_model.predict(preprocessed)
+            category_index = np.argmax(probabilities)
+            confidence =  np.amax(probabilities) * 100
+        except:
+            category_index = 0
+            confidence =  100.0
+
+    return flask.jsonify({'label_id': str(category_index), 'topic': category_names[category_index],'confidence': str(confidence), 'id': str(id), 'url':str(url), 'date_created':str(date_created), 'message': post})
 
 # if this is the main thread of execution first load the model and then start the server
 if __name__ == "__main__":
