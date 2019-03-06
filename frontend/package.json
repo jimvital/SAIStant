@@ -1,5 +1,5 @@
 {
-  "name": "post_retriever",
+  "name": "saistant",
   "version": "0.1.0",
   "private": true,
   "proxy": "https://localhost:3000",

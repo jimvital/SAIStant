@@ -46,17 +46,18 @@ class App extends Component {
     await group_posts.forEach(group_post => {
 
       if (group_post.message != null) {
-        this.setState({
-          post_count: this.state.post_count + 1,
-        });
         setTimeout(() => {
+          this.setState({
+            post_count: this.state.post_count + 1,
+          });
+
           this.classifyPosts({
             id: group_post.id,
             text: group_post.message,
             date_created: group_post.created_time,
             url: group_post.permalink_url
           })
-        }, 2000);
+        }, 3000);
       }
     })
   }
@@ -78,7 +79,6 @@ class App extends Component {
   }
 
   handleResponse = async (response) => {
-
     //SAIS Group ID
     var group_id = "1762491267331648";
     var posts = [];
