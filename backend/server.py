@@ -74,7 +74,7 @@ def predict():
     if (data == None):
         data = flask.request.form
 
-    # if parameters are found, echo the msg parameter 
+    # if data is received 
     if (data != None):
         try:
             post = data["body"]["message"]
@@ -93,13 +93,8 @@ def predict():
 
     return flask.jsonify({'label_id': str(category_index), 'topic': category_names[category_index],'confidence': str(confidence), 'id': str(id), 'url':str(url), 'date_created':str(date_created), 'message': post})
 
-# if this is the main thread of execution first load the model and then start the server
+# main thread of execution, first load the model and then start the server
 if __name__ == "__main__":
     print("[!] Loading Keras ANN model and starting Flask server")
     load_ann()
     app.run(threaded=True)
-    # app.run(host='0.0.0.0')
-
-
-# sample = "Question regarding waitlist: \n May ibang subjects na full na raw ang waitlist according sa SAIS kaya hindi na ako winaitlist. Meaning po ba nito ay diretso prerog na?"
-# http://127.0.0.1:5000/predict?message=Question%20regarding%20waitlist
